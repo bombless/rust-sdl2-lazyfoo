@@ -1,0 +1,8 @@
+[package]
+
+name = "rust-sdl2-lazyfoo"
+version = "0.0.1"
+authors = ["Jon Black <jon_black@mm.st>"]
+
+[dependencies]
+sdl2 = "0.0.13"
