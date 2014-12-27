@@ -3,10 +3,19 @@ name = "rust-sdl2-lazyfoo"
 version = "0.0.1"
 dependencies = [
  "sdl2 0.0.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sdl2_image 0.0.1-alpha.1 (git+https://github.com/xsleonard/rust-sdl2_image)",
 ]
 
 [[package]]
 name = "sdl2"
 version = "0.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "sdl2_image"
+version = "0.0.1-alpha.1"
+source = "git+https://github.com/xsleonard/rust-sdl2_image#7345e8d851cc435feb1b6d446a87efee980535d6"
+dependencies = [
+ "sdl2 0.0.13 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 

@@ -6,3 +6,6 @@ authors = ["Jon Black <jon_black@mm.st>"]
 
 [dependencies]
 sdl2 = "0.0.13"
+
+[dependencies.sdl2_image]
+git = "https://github.com/xsleonard/rust-sdl2_image"
