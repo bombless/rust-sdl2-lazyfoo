@@ -4,7 +4,7 @@ from lazyfoo.net ported to [rust](http://www.rust-lang.org/).
 
 # Requirements
 
-* libsdl
+* libsdl2
 * rust
 * cargo
 
