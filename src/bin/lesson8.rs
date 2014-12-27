@@ -12,7 +12,7 @@ use std::iter::range_step;
 fn main() {
     sdl2::init(sdl2::INIT_EVERYTHING);
 
-    let window = match Window::new("lesson 6", WindowPos::PosCentered,
+    let window = match Window::new("lesson 8", WindowPos::PosCentered,
                                    WindowPos::PosCentered, 640, 480, OPENGL) {
         Ok(w)  => w,
         Err(e) => panic!("Failed to create window: {}", e.to_string()),
