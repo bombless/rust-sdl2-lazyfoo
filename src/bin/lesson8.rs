@@ -1,5 +1,4 @@
 extern crate sdl2;
-extern crate sdl2_image;
 
 use sdl2::event::{Event, poll_event};
 use sdl2::pixels::Color;
