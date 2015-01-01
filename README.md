@@ -21,5 +21,4 @@ around to it yet.
 
 * Lesson 16: [rust-sdl2_ttf](https://github.com/andelf/rust-sdl2_ttf) fails to
   compile against the current rust master;
-* Lesson 17: Forgotten.
 * Lessons 19 and 20: I don't have a joystick (yet);
