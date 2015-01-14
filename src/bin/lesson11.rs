@@ -5,6 +5,7 @@ use sdl2::event::{Event, poll_event};
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::{ACCELERATED, Renderer, RenderDriverIndex, Texture};
+use sdl2::surface::Surface;
 use sdl2::video::{Window,WindowPos,OPENGL};
 
 use sdl2_image::LoadSurface;
@@ -18,7 +19,7 @@ pub struct Sprite {
 
 impl Sprite {
     pub fn new(filename: &Path, renderer: &Renderer) -> Sprite {
-        let surface = match LoadSurface::from_file(filename) {
+        let surface: Surface = match LoadSurface::from_file(filename) {
             Ok(s) => s,
             Err(e) => panic!("Failed to load image surface: {}", e.to_string()),
         };

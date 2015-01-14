@@ -8,7 +8,7 @@ use sdl2::video::{Window,WindowPos,OPENGL};
 use sdl2_image::LoadSurface;
 
 fn load_image(filename: &str, format: PixelFormat) -> Surface {
-    let image_surface = match LoadSurface::from_file(&Path::new(filename)) {
+    let image_surface: Surface = match LoadSurface::from_file(&Path::new(filename)) {
         Ok(s) => s,
         Err(e) => panic!("Failed to load image surface: {}", e.to_string()),
     };
