@@ -5,7 +5,7 @@ use sdl2::timer::delay;
 use sdl2::pixels::Color;
 
 fn main() {
-    sdl2::init(sdl2::INIT_EVERYTHING);
+    let context = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
 
     let window = match Window::new("lesson 1", WindowPos::PosCentered,
                                    WindowPos::PosCentered, 640, 480, OPENGL) {
@@ -23,6 +23,4 @@ fn main() {
     window.update_surface();
 
     delay(2000);
-
-    sdl2::quit();
 }

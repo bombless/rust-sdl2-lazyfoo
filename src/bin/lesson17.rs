@@ -1,11 +1,11 @@
 extern crate sdl2;
 extern crate sdl2_image;
 
-use sdl2::event::{Event, poll_event};
+use sdl2::event::Event;
 use sdl2::mouse::get_mouse_state;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
-use sdl2::render::{ACCELERATED, Renderer, RendererFlip, RenderDriverIndex,
+use sdl2::render::{ACCELERATED, Renderer, RenderDriverIndex,
                    Texture};
 use sdl2::surface::Surface;
 use sdl2::video::{Window,WindowPos,OPENGL};
@@ -14,15 +14,17 @@ use sdl2_image::LoadSurface;
 
 use std::rc::Rc;
 
+use std::path::Path;
 
-pub struct Sprite {
-    texture: Texture,
+
+pub struct Sprite<'a> {
+    texture: Texture<'a>,
     width: i32,
     height: i32,
 }
 
-impl Sprite {
-    pub fn new(filename: &Path, renderer: &Renderer) -> Sprite {
+impl<'a> Sprite<'a> {
+    pub fn new(filename: &Path, renderer: &'a Renderer) -> Sprite<'a> {
         let surface: Surface = match LoadSurface::from_file(filename) {
             Ok(s) => s,
             Err(e) => panic!("Failed to load image surface: {}", e.to_string()),
@@ -43,8 +45,7 @@ impl Sprite {
     }
 
     fn render(&self, renderer: &Renderer, x: i32, y: i32,
-              clip: Option<Rect>, angle: f64, centre: Option<Point>,
-              flip: Option<RendererFlip>) {
+              clip: Option<Rect>, angle: f64, centre: Option<Point>) {
         let mut render_quad = Rect::new(x, y, self.width, self.height);
         match clip {
             Some(rect) => {
@@ -53,14 +54,9 @@ impl Sprite {
             }
             None => {}
         }
-
-        let flip_mode = match flip {
-            Some(f) => f,
-            None => RendererFlip::None,
-        };
-
-        renderer.copy_ex(&self.texture, clip, Some(render_quad), angle,
-                         centre, flip_mode).unwrap();
+        let flip_mode = (false, false);
+        renderer.drawer().copy_ex(&self.texture, clip, Some(render_quad), angle,
+                         centre, flip_mode)
     }
 }
 
@@ -71,17 +67,17 @@ enum ButtonSpriteType {
     MouseUp,
 }
 
-struct Button {
+struct Button<'a> {
     position: Point,
     btn_type: ButtonSpriteType,
     height: i32,
     width: i32,
-    sprite_sheet: Rc<Sprite>,
+    sprite_sheet: Rc<Sprite<'a>>,
 }
 
-impl Button {
+impl<'a> Button<'a> {
     pub fn new(x: i32, y: i32, width: i32, height: i32,
-               sprite_sheet: Rc<Sprite>) -> Button {
+               sprite_sheet: Rc<Sprite<'a>>) -> Button<'a> {
         Button {
             position:  Point::new(x, y),
             height: height,
@@ -96,13 +92,13 @@ impl Button {
 
         if self.mouse_is_in_button(x as i32, y as i32) {
             match e {
-                &Event::MouseMotion(..) => {
+                &Event::MouseMotion{..} => {
                     self.btn_type = ButtonSpriteType::MouseOverMotion
                 }
-                &Event::MouseButtonDown(..) => {
+                &Event::MouseButtonDown{..} => {
                     self.btn_type = ButtonSpriteType::MouseDown
                 }
-                &Event::MouseButtonUp(..) => {
+                &Event::MouseButtonUp{..} => {
                     self.btn_type = ButtonSpriteType::MouseUp
                 }
                 _ => return,
@@ -121,7 +117,7 @@ impl Button {
 
         };
         self.sprite_sheet.render(renderer, self.position.x, self.position.y,
-                                 Some(clip), 0.0, None, None);
+                                 Some(clip), 0.0, None);
     }
 
     fn mouse_is_in_button(&self, mouse_x: i32, mouse_y: i32) -> bool {
@@ -140,7 +136,7 @@ impl Button {
 }
 
 fn main() {
-    sdl2::init(sdl2::INIT_EVERYTHING);
+    let context = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
     sdl2_image::init(sdl2_image::INIT_PNG);
 
     let window = match Window::new("lesson 17", WindowPos::PosCentered,
@@ -166,27 +162,29 @@ fn main() {
     let mut button4 = Button::new(640 - 300, 480 - 200, 300, 200,
                                   button_sprite_sheet.clone());
 
+    let mut event_pump = context.event_pump();
     'event: loop {
-        match poll_event() {
-            Event::Quit(_) => break 'event,
-            e => {
-                button1.handle_event(&e);
-                button2.handle_event(&e);
-                button3.handle_event(&e);
-                button4.handle_event(&e);
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit{..} => break 'event,
+                e => {
+                    button1.handle_event(&e);
+                    button2.handle_event(&e);
+                    button3.handle_event(&e);
+                    button4.handle_event(&e);
+                }
             }
+
+            renderer.drawer().set_draw_color(Color::RGBA(255, 255, 255, 255));
+            renderer.drawer().clear();
+
+            button1.render(&renderer);
+            button2.render(&renderer);
+            button3.render(&renderer);
+            button4.render(&renderer);
+
+            renderer.drawer().present();
         }
-
-        renderer.set_draw_color(Color::RGBA(255, 255, 255, 255)).unwrap();
-        renderer.clear().unwrap();
-
-        button1.render(&renderer);
-        button2.render(&renderer);
-        button3.render(&renderer);
-        button4.render(&renderer);
-
-        renderer.present();
     }
 
-    sdl2::quit();
 }

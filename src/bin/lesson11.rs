@@ -1,7 +1,7 @@
 extern crate sdl2;
 extern crate sdl2_image;
 
-use sdl2::event::{Event, poll_event};
+use sdl2::event::Event;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::{ACCELERATED, Renderer, RenderDriverIndex, Texture};
@@ -10,15 +10,17 @@ use sdl2::video::{Window,WindowPos,OPENGL};
 
 use sdl2_image::LoadSurface;
 
+use std::path::Path;
 
-pub struct Sprite {
-    texture: Texture,
+
+pub struct Sprite<'a> {
+    texture: Texture<'a>,
     width: i32,
     height: i32,
 }
 
-impl Sprite {
-    pub fn new(filename: &Path, renderer: &Renderer) -> Sprite {
+impl<'a> Sprite<'a> {
+    pub fn new(filename: &Path, renderer: &'a Renderer) -> Sprite<'a> {
         let surface: Surface = match LoadSurface::from_file(filename) {
             Ok(s) => s,
             Err(e) => panic!("Failed to load image surface: {}", e.to_string()),
@@ -50,12 +52,12 @@ impl Sprite {
             None => {}
         }
 
-        renderer.copy(&self.texture, clip, Some(render_quad)).unwrap();
+        renderer.drawer().copy(&self.texture, clip, Some(render_quad))
     }
 }
 
 fn main() {
-    sdl2::init(sdl2::INIT_EVERYTHING);
+    let context = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
     sdl2_image::init(sdl2_image::INIT_PNG);
 
     let window = match Window::new("lesson 11", WindowPos::PosCentered,
@@ -71,26 +73,29 @@ fn main() {
     };
 
     let sprite_sheet = Sprite::new(&Path::new("res/dots.png"), &renderer);
+
+    let mut event_pump = context.event_pump();
     'event: loop {
-        match poll_event() {
-            Event::Quit(_) => break 'event,
-            _ => {},
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit{..} => break 'event,
+                _ => {},
+            }
+
+            renderer.drawer().set_draw_color(Color::RGBA(255, 255, 255, 255));
+            renderer.drawer().clear();
+
+            sprite_sheet.render(&renderer, 0, 0,
+                                Some(Rect::new(0, 0, 100, 100)));
+            sprite_sheet.render(&renderer, 640 - 100, 0,
+                                Some(Rect::new(100, 0, 100, 100)));
+            sprite_sheet.render(&renderer, 0, 480 - 100,
+                                Some(Rect::new(0, 100, 100, 100)));
+            sprite_sheet.render(&renderer, 640 - 100, 480 - 100,
+                                Some(Rect::new(100, 100, 100, 100)));
+
+            renderer.drawer().present();
         }
-
-        renderer.set_draw_color(Color::RGBA(255, 255, 255, 255)).unwrap();
-        renderer.clear().unwrap();
-
-        sprite_sheet.render(&renderer, 0, 0,
-                            Some(Rect::new(0, 0, 100, 100)));
-        sprite_sheet.render(&renderer, 640 - 100, 0,
-                            Some(Rect::new(100, 0, 100, 100)));
-        sprite_sheet.render(&renderer, 0, 480 - 100,
-                            Some(Rect::new(0, 100, 100, 100)));
-        sprite_sheet.render(&renderer, 640 - 100, 480 - 100,
-                            Some(Rect::new(100, 100, 100, 100)));
-
-        renderer.present();
     }
 
-    sdl2::quit();
 }

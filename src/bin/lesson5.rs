@@ -1,10 +1,12 @@
 extern crate sdl2;
 
-use sdl2::event::{Event, poll_event};
+use sdl2::event::Event;
 use sdl2::pixels::PixelFormat;
 use sdl2::rect::Rect;
 use sdl2::surface::Surface;
 use sdl2::video::{Window,WindowPos,OPENGL};
+
+use std::path::Path;
 
 fn load_image(filename: &str, format: PixelFormat) -> Surface {
     let image_surface = match Surface::from_bmp(&Path::new(filename)) {
@@ -16,7 +18,7 @@ fn load_image(filename: &str, format: PixelFormat) -> Surface {
 }
 
 fn main() {
-    sdl2::init(sdl2::INIT_EVERYTHING);
+    let context = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
 
     let window = match Window::new("lesson 5", WindowPos::PosCentered,
                                    WindowPos::PosCentered, 640, 480, OPENGL) {
@@ -30,20 +32,22 @@ fn main() {
     };
 
     let surface = load_image("res/stretch.bmp", screen.get_pixel_format());
+
+    let mut event_pump = context.event_pump();
     'event: loop {
-        match poll_event() {
-            Event::Quit(_) => break 'event,
-            _ => {},
-        }
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit{..} => break 'event,
+                _ => {},
+            }
 
-        // rust-sdl2 isn't using the newest interface, hence softstretch.
-        match surface.soft_stretch(None, &mut screen,
-                                   Some(Rect::new(0, 0, 640, 480))) {
-            Ok(_) => {},
-            Err(e) => panic!("error: {}", e.to_string()),
+            // rust-sdl2 isn't using the newest interface, hence softstretch.
+            match surface.soft_stretch(None, &mut screen,
+                                       Some(Rect::new(0, 0, 640, 480))) {
+                Ok(_) => {},
+                Err(e) => panic!("error: {}", e.to_string()),
+            }
+            window.update_surface();
         }
-        window.update_surface();
     }
-
-    sdl2::quit();
 }

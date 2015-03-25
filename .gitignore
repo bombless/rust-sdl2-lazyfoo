@@ -18,3 +18,5 @@
 Session.vim
 .netrwhist
 *~
+
+Cargo.lock

@@ -1,9 +1,11 @@
 extern crate sdl2;
 
-use sdl2::event::{Event, poll_event};
+use sdl2::event::Event;
 use sdl2::video::{Window,WindowPos,OPENGL};
 use sdl2::surface::Surface;
 use sdl2::keycode::KeyCode;
+
+use std::path::Path;
 
 fn load_image(filename: &str) -> Surface {
     match Surface::from_bmp(&Path::new(filename)) {
@@ -13,7 +15,7 @@ fn load_image(filename: &str) -> Surface {
 }
 
 fn main() {
-    sdl2::init(sdl2::INIT_EVERYTHING);
+    let context = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
 
     let window = match Window::new("lesson 4", WindowPos::PosCentered,
                                    WindowPos::PosCentered, 640, 480, OPENGL) {
@@ -36,10 +38,17 @@ fn main() {
 
     let mut current_surface = key_press_surfaces[0];
 
-    'event: loop {
-        match poll_event() {
-            Event::Quit(_) => break 'event,
-            Event::KeyDown(_,_,k,_,_,_) => match k {
+    let mut event_pump = context.event_pump();
+    let mut event_iter = event_pump.poll_iter();
+    loop {
+        let evt;
+        match event_iter.next() {
+            Some(x) => evt = x,
+            None => continue
+        }
+        match evt {
+            Event::Quit{..} => break,
+            Event::KeyDown{ keycode: k, ..} => match k {
                 KeyCode::Up    => current_surface = key_press_surfaces[1],
                 KeyCode::Down  => current_surface = key_press_surfaces[2],
                 KeyCode::Left  => current_surface = key_press_surfaces[3],
@@ -52,5 +61,4 @@ fn main() {
         window.update_surface();
     }
 
-    sdl2::quit();
 }

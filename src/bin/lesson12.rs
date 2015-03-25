@@ -1,7 +1,7 @@
 extern crate sdl2;
 extern crate sdl2_image;
 
-use sdl2::event::{Event, poll_event};
+use sdl2::event::Event;
 use sdl2::keycode::KeyCode;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
@@ -11,15 +11,16 @@ use sdl2::video::{Window,WindowPos,OPENGL};
 
 use sdl2_image::LoadSurface;
 
+use std::path::Path;
 
-pub struct Sprite {
-    texture: Texture,
+pub struct Sprite<'a> {
+    texture: Texture<'a>,
     width: i32,
     height: i32,
 }
 
-impl Sprite {
-    pub fn new(filename: &Path, renderer: &Renderer) -> Sprite {
+impl<'a> Sprite<'a> {
+    pub fn new(filename: &Path, renderer: &'a Renderer) -> Sprite<'a> {
         let surface: Surface = match LoadSurface::from_file(filename) {
             Ok(s) => s,
             Err(e) => panic!("Failed to load image surface: {}", e.to_string()),
@@ -39,8 +40,8 @@ impl Sprite {
         }
     }
 
-    fn set_color(&self, r: u8, g: u8, b: u8) {
-        self.texture.set_color_mod(r, g, b).unwrap();
+    fn set_color(&mut self, r: u8, g: u8, b: u8) {
+        self.texture.set_color_mod(r, g, b)
     }
 
     fn render(&self, renderer: &Renderer, x: i32, y: i32,
@@ -55,12 +56,12 @@ impl Sprite {
             None => {}
         }
 
-        renderer.copy(&self.texture, clip, Some(render_quad)).unwrap();
+        renderer.drawer().copy(&self.texture, clip, Some(render_quad))
     }
 }
 
 fn main() {
-    sdl2::init(sdl2::INIT_EVERYTHING);
+    let context = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
     sdl2_image::init(sdl2_image::INIT_PNG);
 
     let window = match Window::new("lesson 12", WindowPos::PosCentered,
@@ -75,34 +76,37 @@ fn main() {
         Err(e) => panic!("Failed to create renderer: {}", e.to_string()),
     };
 
-    let modulated_texture = Sprite::new(&Path::new("res/colors.png"),
+    let mut modulated_texture = Sprite::new(&Path::new("res/colors.png"),
                                         &renderer);
     let mut r: u8 = 255;
     let mut g: u8 = 255;
     let mut b: u8 = 255;
+
+    let mut event_pump = context.event_pump();
     'event: loop {
-        match poll_event() {
-            Event::Quit(_) => break 'event,
-            Event::KeyDown(_,_,k,_,_,_) => match k {
-                KeyCode::Q => r += 32,
-                KeyCode::W => g += 32,
-                KeyCode::E => b += 32,
-                KeyCode::A => r -= 32,
-                KeyCode::S => g -= 32,
-                KeyCode::D => b -= 32,
-                _          => {},
-            },
-            _ => {},
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit{..} => break 'event,
+                Event::KeyDown{ keycode: k, ..} => match k {
+                    KeyCode::Q => r += 32,
+                    KeyCode::W => g += 32,
+                    KeyCode::E => b += 32,
+                    KeyCode::A => r -= 32,
+                    KeyCode::S => g -= 32,
+                    KeyCode::D => b -= 32,
+                    _          => {},
+                },
+                _ => {},
+            }
+
+            renderer.drawer().set_draw_color(Color::RGBA(255, 255, 255, 255));
+            renderer.drawer().clear();
+
+            modulated_texture.set_color(r, g, b);
+            modulated_texture.render(&renderer, 0, 0, None);
+
+            renderer.drawer().present();
         }
-
-        renderer.set_draw_color(Color::RGBA(255, 255, 255, 255)).unwrap();
-        renderer.clear().unwrap();
-
-        modulated_texture.set_color(r, g, b);
-        modulated_texture.render(&renderer, 0, 0, None);
-
-        renderer.present();
     }
 
-    sdl2::quit();
 }

@@ -4,8 +4,10 @@ use sdl2::video::{Window,WindowPos,OPENGL};
 use sdl2::surface::Surface;
 use sdl2::timer::delay;
 
+use std::path::Path;
+
 fn main() {
-    sdl2::init(sdl2::INIT_EVERYTHING);
+    let context = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
 
     let window = match Window::new("lesson 2", WindowPos::PosCentered,
                                    WindowPos::PosCentered, 640, 480, OPENGL) {
@@ -28,6 +30,5 @@ fn main() {
     window.update_surface();
 
     delay(2000);
-
-    sdl2::quit();
+    drop(context)
 }
